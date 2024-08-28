@@ -114,7 +114,7 @@ def extract_information(input: URLInput):
     docs = url_loader(input.url)
     result = extractor(docs)
     return {
-        "url scrapped info":docs,
+        # "url scrapped info":docs,
         "extracted_information": result}
 
 # @app.post("/ask-question/")
