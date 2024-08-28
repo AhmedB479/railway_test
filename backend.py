@@ -18,12 +18,33 @@ import os
 from pinecone import Pinecone as pc
 from pinecone import PodSpec
 
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from typing import List
 
-def url(user_input):
-    # when URL
+app = FastAPI(title="backend API")
+
+@app.get("/",include_in_schema=False)
+def index():
+    return RedirectResponse("/docs",status_code=308)
+
+# Load environment variables
+load_dotenv()
+
+# Models for API input
+class URLInput(BaseModel):
+    url: str
+
+class QuestionInput(BaseModel):
+    docs: List[Document]
+    question: str
+
+def url_loader(user_input):
     loader = WebBaseLoader(user_input)
     docs = loader.load()
     return docs
+
 def extractor(docs):
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, top_p=0.85)
     
@@ -49,10 +70,8 @@ def extractor(docs):
     llm_prompt = PromptTemplate.from_template(llm_prompt_template)
     chain = LLMChain(llm=llm, prompt=llm_prompt)
 
-    # Execute the chain with the provided documents
     response = chain.run({"context": docs})
     return response
-
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
@@ -63,20 +82,17 @@ def pine_index(docs, gemini_embeddings):
     if index_name not in pine_client.list_indexes().names():
         print("Creating index")
         pine_client.create_index(name=index_name,
-                        metric="cosine",
-                        dimension=768,
-                        spec=PodSpec(
-                            environment="gcp-starter",
-                            pod_type="starter",
-                            pods=1)
+                                 metric="cosine",
+                                 dimension=768,
+                                 spec=PodSpec(
+                                     environment="gcp-starter",
+                                     pod_type="starter",
+                                     pods=1)
         )
         print(pine_client.describe_index(index_name))
 
     vectorstore = Pinecone.from_documents(docs, gemini_embeddings, index_name=index_name)
-    # test vector store
     retriever = vectorstore.as_retriever()
-    print(len(retriever.invoke("MMLU")))
-    
     return retriever
 
 def gemini(retriever, question):
@@ -98,22 +114,25 @@ def gemini(retriever, question):
         | llm
         | StrOutputParser()
     )
-    print(rag_chain.invoke(question))
+    return rag_chain.invoke(question)
 
+# FastAPI Endpoints
+@app.post("/extract/{URLInput}")
+def extract_information(URLInput: str):
+    docs = url_loader(input.url)
+    result = extractor(docs)
+    return {"extracted_information": result}
+
+@app.post("/ask-question/{QuestionInput}")
+def ask_question(QuestionInput: str):
+    try:
+        gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        retriever = pine_index(input.docs, gemini_embeddings)
+        answer = gemini(retriever, input.question)
+        return {"answer": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    user_input = input("Enter query:  ")
-    
-    docs = url(user_input)
-    
-    load_dotenv()
-
-    os.environ['PINECONE_API_KEY'] = os.getenv("PINECONE_API_KEY")
-    os.environ['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
-
-    # gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    # question = input("What is your query:  ")
-    # retriever = pine_index(docs, gemini_embeddings)
-    # gemini(retriever, question)
-
-    print(extractor(docs))
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
