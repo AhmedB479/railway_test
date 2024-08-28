@@ -45,51 +45,7 @@ def url_loader(user_input):
 def extractor(docs):
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, top_p=0.85)
     
-    llm_prompt_template = """You are an assistant designed to summarize articles into their key components. Your output should be well-organized in HTML format, with each key component sorted in order. If the article contains diagrams or visual elements, ensure to include them as descriptions within the HTML structure.
-
-Here’s what you need to do:
-1. Summarize the article into its main sections: Introduction, Main Content, Diagrams (if any), and Conclusion.
-2. For each section, create a corresponding HTML tag.
-3. If the article includes diagrams or visuals, describe them in a `<figure>` tag with a `<figcaption>` for the description.
-4. Ensure the HTML structure is properly ordered and formatted.
-
-Input Article: {context}
-
-Output the summarized article in the following HTML format:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Summarized Article</title>
-</head>
-<body>
-    <section>
-        <h1>Introduction</h1>
-        <p>{Introduction}</p>
-    </section>
-    <section>
-        <h2>Main Content</h2>
-        <p>{MainContent}</p>
-    </section>
-    {if_diagrams_present}
-    <section>
-        <h3>Diagrams</h3>
-        <figure>
-            <img src="{diagram_source}" alt="Diagram description">
-            <figcaption>{diagram_caption}</figcaption>
-        </figure>
-    </section>
-    {/if_diagrams_present}
-    <section>
-        <h4>Conclusion</h4>
-        <p>{Conclusion}</p>
-    </section>
-</body>
-</html>
-"""
+    llm_prompt_template = """summarize this article into its key components"""
 
     llm_prompt = PromptTemplate.from_template(llm_prompt_template)
     chain = LLMChain(llm=llm, prompt=llm_prompt)
