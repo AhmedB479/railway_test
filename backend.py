@@ -29,13 +29,6 @@ def index():
 load_dotenv()
 
 # Models for API input
-class URLInput(BaseModel):
-    url: str
-
-class QuestionInput(BaseModel):
-    docs: List[Document]
-    question: str
-
 def url_loader(user_input):
     loader = WebBaseLoader(user_input)
     docs = loader.load()
@@ -113,14 +106,14 @@ def gemini(retriever, question):
     return rag_chain.invoke(question)
 
 # FastAPI Endpoints
-@app.post("/extract/")
-def extract_information(input: URLInput):
+@app.post("/extract/{URLInput}")
+def extract_information(URLInput: str):
     docs = url_loader(input.url)
     result = extractor(docs)
     return {"extracted_information": result}
 
-@app.post("/ask-question/")
-def ask_question(input: QuestionInput):
+@app.post("/ask-question/{QuestionInput}")
+def ask_question(QuestionInput: str):
     try:
         gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         retriever = pine_index(input.docs, gemini_embeddings)
