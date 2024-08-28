@@ -1,15 +1,11 @@
-from langchain import hub
 from langchain import PromptTemplate
 from langchain.docstore.document import Document
 from langchain.document_loaders import WebBaseLoader
 from langchain.schema import StrOutputParser
 from langchain.schema.prompt_template import format_document
 from langchain.schema.runnable import RunnablePassthrough
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_pinecone import Pinecone
-from langchain_community.document_loaders import JSONLoader
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI, GoogleGenerativeAI
-from langchain.prompts import PromptTemplate
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
 
 from dotenv import load_dotenv
@@ -25,9 +21,9 @@ from typing import List
 
 app = FastAPI(title="backend API")
 
-@app.get("/",include_in_schema=False)
+@app.get("/", include_in_schema=False)
 def index():
-    return RedirectResponse("/docs",status_code=308)
+    return RedirectResponse("/docs", status_code=308)
 
 # Load environment variables
 load_dotenv()
@@ -117,14 +113,14 @@ def gemini(retriever, question):
     return rag_chain.invoke(question)
 
 # FastAPI Endpoints
-@app.post("/extract/{URLInput}")
-def extract_information(URLInput: str):
+@app.post("/extract/")
+def extract_information(input: URLInput):
     docs = url_loader(input.url)
     result = extractor(docs)
     return {"extracted_information": result}
 
-@app.post("/ask-question/{QuestionInput}")
-def ask_question(QuestionInput: str):
+@app.post("/ask-question/")
+def ask_question(input: QuestionInput):
     try:
         gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         retriever = pine_index(input.docs, gemini_embeddings)
