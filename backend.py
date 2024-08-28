@@ -107,8 +107,10 @@ def gemini(retriever, question):
 
 # FastAPI Endpoints
 @app.post("/extract/{URLInput}")
-def extract_information(URLInput: list):
-    docs = url_loader(URLInput[0])
+def extract_information(URLInput: str):
+    url = []
+    url.append(URLInput)
+    docs = url_loader(url[0])
     print(docs)
     result = extractor(docs)
     print(result)
