@@ -117,8 +117,8 @@ def gemini(retriever, question):
 @app.post("/extract/")
 def extract_information(input: URLInput):
     docs = url_loader(input.url)
-    result = extractor(docs)
-    return {"extracted_information": result}
+    # result = extractor(docs)
+    return {"extracted_information": docs}
 
 # @app.post("/ask-question/")
 # def ask_question(input: QuestionInput):
