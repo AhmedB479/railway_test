@@ -108,19 +108,20 @@ def gemini(retriever, question):
 # FastAPI Endpoints
 @app.post("/extract/{URLInput}")
 def extract_information(URLInput: str):
-    docs = url_loader(input.url)
+    docs = url_loader(URLInput)
     result = extractor(docs)
     return {"extracted_information": result}
 
-@app.post("/ask-question/{QuestionInput}")
-def ask_question(QuestionInput: str):
-    try:
-        gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        retriever = pine_index(input.docs, gemini_embeddings)
-        answer = gemini(retriever, input.question)
-        return {"answer": answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @app.post("/ask-question/{QuestionInput}")
+# def ask_question(QuestionInput: str):
+#     try:
+#         gemini_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+#         docs = url_loader(QuestionInput)
+#         retriever = pine_index(docs, gemini_embeddings)
+#         answer = gemini(retriever, QuestionInput)
+#         return {"answer": answer}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
