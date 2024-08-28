@@ -45,8 +45,11 @@ def url_loader(user_input):
 def extractor(docs):
     llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7, top_p=0.85)
     
-    llm_prompt_template = """summarize this article into its key components"""
+    llm_prompt_template = """Summarize the following article into its key components:
 
+    Context: {context}
+
+    Summary:"""
     llm_prompt = PromptTemplate.from_template(llm_prompt_template)
     chain = LLMChain(llm=llm, prompt=llm_prompt)
 
@@ -101,7 +104,9 @@ def gemini(retriever, question):
 def extract_information(input: URLInput):
     docs = url_loader(input.url)
     result = extractor(docs)
-    return {"extracted_information": result}
+    return {
+        "url scrapped info":docs,
+        "extracted_information": result}
 
 # @app.post("/ask-question/")
 # def ask_question(input: QuestionInput):
