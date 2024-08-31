@@ -14,11 +14,14 @@ import os
 from pinecone import Pinecone as pc
 from pinecone import PodSpec
 
+import pandas as pd
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+from pdf_work import chaining
 
 app = FastAPI(title="backend API")
 
@@ -38,9 +41,11 @@ def index():
 load_dotenv()
 
 # Models for API input
-# Models for API input
 class URLInput(BaseModel):
     url: str
+
+class PDFInput(BaseModel):
+    pdf: dict #since we will recieve image in base 64
 
 class QuestionInput(BaseModel):
     docs: List[Document]
@@ -109,13 +114,21 @@ def gemini(retriever, question):
     return rag_chain.invoke(question)
 
 # FastAPI Endpoints
-@app.post("/extract/")
-def extract_information(input: URLInput):
+@app.post("/extract_url/")
+def extract_url(input: URLInput):
     docs = url_loader(input.url)
     result = extractor(docs)
     return {
         # "url scrapped info":docs,
         "extracted_information": result}
+
+@app.post("/extract_pdf/")
+def extract_pdf(input: PDFInput):    
+    docs = chaining(input.pdf)
+    # result = extractor(docs)
+    return {
+        # "url scrapped info":docs,
+        "extracted_information": docs}
 
 # @app.post("/ask-question/")
 # def ask_question(input: QuestionInput):
