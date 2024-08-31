@@ -13,8 +13,8 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 
 def chaining(pages):
     cleaned = [item['cleanImage'] for item in pages['pages_api']]
-    os.environ['GOOGLE_API_KEY'] = os.getenv['GOOGLE_API_KEY']
-    
+    # os.environ['GOOGLE_API_KEY'] = os.getenv['GOOGLE_API_KEY']
+    load_dotenv()
     class Paper(BaseModel):
         page: Optional[str] = Field(description="page heading")
         summary: Optional[str] = Field(description="summary of page")
